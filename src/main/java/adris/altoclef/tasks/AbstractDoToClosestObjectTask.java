@@ -57,7 +57,9 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
 
     @Override
     protected Task onTick(AltoClef mod) {
-
+        //if (mod.getClientBaritone().getMineProcess().isActive()) return null;
+        //if (mod.getClientBaritone().getMineProcess().isActive() || mod.getClientBaritone().getGetToBlockProcess().isActive()) return null;
+        if (mod.getClientBaritone().getMineProcess().isActive() || mod.getClientBaritone().getGetToBlockProcess().isActive())return null;
         _wasWandering = false;
 
         // Reset our pursuit if our pursuing object no longer is pursuable.

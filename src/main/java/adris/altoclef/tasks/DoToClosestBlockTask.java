@@ -3,6 +3,8 @@ package adris.altoclef.tasks;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.WorldHelper;
+import baritone.api.utils.BlockOptionalMeta;
+import baritone.api.utils.BlockOptionalMetaLookup;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -84,11 +86,15 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     @Override
     protected void onStart(AltoClef mod) {
         mod.getBlockTracker().trackBlock(_targetBlocks);
+        //mod.getClientBaritone().getMineProcess().mine(_targetBlocks);
+        mod.getClientBaritone().getGetToBlockProcess().getToBlock(_targetBlocks[0]);
     }
 
     @Override
     protected void onStop(AltoClef mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_targetBlocks);
+        mod.getClientBaritone().getMineProcess().cancel();
+        mod.getClientBaritone().getGetToBlockProcess().onLostControl();
     }
 
     @Override

@@ -304,7 +304,7 @@ public class BeatMinecraft2Task extends Task {
         if (_config.sleepThroughNight && !_endPortalOpened && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
             if (WorldHelper.canSleep()) {
                 setDebugState("Sleeping through night");
-                return _sleepThroughNightTask;
+                //return _sleepThroughNightTask;
             }
             if (!mod.getItemStorage().hasItem(ItemHelper.BED)) {
                 if (mod.getBlockTracker().anyFound(blockPos -> WorldHelper.canBreak(mod, blockPos), ItemHelper.itemsToBlocks(ItemHelper.BED))
@@ -662,7 +662,10 @@ public class BeatMinecraft2Task extends Task {
                     _foodTask = new CollectFoodTask(_config.foodUnits);
                     return _foodTask;
                 }
-
+                if (!StorageHelper.itemTargetsMet(mod, combine(toItemTargets(Items.DIAMOND_PICKAXE)))) {
+                    _gearTask = TaskCatalogue.getSquashedItemTask(combine(toItemTargets(Items.DIAMOND_PICKAXE)));
+                    return _gearTask;
+                }
                 // Then get diamond
                 if (!eyeGearSatisfied) {
                     _gearTask = TaskCatalogue.getSquashedItemTask(Stream.concat(Arrays.stream(COLLECT_EYE_ARMOR).filter(item -> !mod.getItemStorage().hasItem(item) && !StorageHelper.isArmorEquipped(mod, item)).map(item -> new ItemTarget(item, 1)), Arrays.stream(COLLECT_EYE_GEAR)).toArray(ItemTarget[]::new));

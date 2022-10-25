@@ -6,8 +6,12 @@ import adris.altoclef.tasks.entity.KillEntitiesTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
+import baritone.api.BaritoneAPI;
+import baritone.api.process.IFollowProcess;
 import net.minecraft.entity.Entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class KillAndLootTask extends ResourceTask {
@@ -15,6 +19,9 @@ public class KillAndLootTask extends ResourceTask {
     private final Class _toKill;
 
     private final Task _killTask;
+    private IFollowProcess _b;
+
+    private List<Class<? extends Entity>> classes = new ArrayList<>();
 
     public KillAndLootTask(Class toKill, Predicate<Entity> shouldKill, ItemTarget... itemTargets) {
         super(itemTargets.clone());
@@ -35,7 +42,10 @@ public class KillAndLootTask extends ResourceTask {
 
     @Override
     protected void onResourceStart(AltoClef mod) {
-
+        classes.add((Class<? extends Entity>) _toKill);
+        //_b = BaritoneAPI.getProvider().getPrimaryBaritone().getFollowProcess();
+        //_b.follow( e -> classes.stream().anyMatch(c -> c.isInstance(e)));
+        mod.getClientBaritone().getFollowProcess().follow( e -> classes.stream().anyMatch(c -> c.isInstance(e)));
     }
 
     @Override
@@ -46,7 +56,9 @@ public class KillAndLootTask extends ResourceTask {
                 return getToCorrectDimensionTask(mod);
             }
             setDebugState("Searching for mob...");
-            return new TimeoutWanderTask(9999999);
+            //if (_b!=null && _b.isActive()) return null;
+            if (mod.getClientBaritone().getFollowProcess().isActive()) return null;
+            //return new TimeoutWanderTask(9999999);
         }
         // We found the mob!
         return _killTask;
@@ -54,7 +66,7 @@ public class KillAndLootTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(AltoClef mod, Task interruptTask) {
-
+        mod.getClientBaritone().getFollowProcess().onLostControl();
     }
 
     @Override

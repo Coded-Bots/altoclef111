@@ -16,7 +16,11 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.CursorSlot;
+import baritone.Baritone;
+import baritone.api.BaritoneAPI;
+import baritone.api.process.IMineProcess;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
@@ -27,6 +31,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
+
+import static adris.altoclef.util.helpers.ItemHelper.blocksToItems;
 
 public class MineAndCollectTask extends ResourceTask {
 
@@ -162,6 +168,7 @@ public class MineAndCollectTask extends ResourceTask {
         private final Task _pickupTask;
         private BlockPos _miningPos;
         private AltoClef _mod;
+        private IMineProcess _b;
 
         public MineOrCollectTask(Block[] blocks, ItemTarget[] targets) {
             _blocks = blocks;
@@ -215,12 +222,14 @@ public class MineAndCollectTask extends ResourceTask {
         @Override
         protected Task onTick(AltoClef mod) {
             _mod = mod;
-            if (_miningPos != null && !_progressChecker.check(mod)) {
-                Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
-                mod.getBlockTracker().requestBlockUnreachable(_miningPos, 2);
-                _blacklist.add(_miningPos);
-                _miningPos = null;
-                _progressChecker.reset();
+            if (!mod.getClientBaritone().getMineProcess().isActive()) {
+                if (_miningPos != null && !_progressChecker.check(mod)) {
+                    Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
+                    mod.getBlockTracker().requestBlockUnreachable(_miningPos, 2);
+                    _blacklist.add(_miningPos);
+                    _miningPos = null;
+                    _progressChecker.reset();
+                }
             }
             return super.onTick(mod);
         }
@@ -263,13 +272,31 @@ public class MineAndCollectTask extends ResourceTask {
 
         @Override
         protected void onStart(AltoClef mod) {
+            //_b = BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess();
+            //_b.mine(_targets[0].getTargetCount(),_blocks);
+            if (!Arrays.stream(_blocks).anyMatch(Blocks.FURNACE::equals) && !Arrays.stream(_blocks).anyMatch(Blocks.CRAFTING_TABLE::equals)){
+                mod.getClientBaritone().getMineProcess().mine(_targets[0].getTargetCount(), _blocks);
+            }
+            mod.getBehaviour().addProtectedItems(blocksToItems(_blocks));//MILA
+            for (Block block : _blocks) {
+                if (mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(block.asItem())) {
+                    mod.getClientBaritoneSettings().acceptableThrowawayItems.value.remove(block.asItem());
+                }
+            }
             _progressChecker.reset();
             _miningPos = null;
         }
 
         @Override
         protected void onStop(AltoClef mod, Task interruptTask) {
-
+            //_b.cancel();
+            mod.getClientBaritone().getMineProcess().cancel();
+            /**for (Block block : _blocks) {
+                if (!mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(block.asItem())) {
+                    mod.getClientBaritoneSettings().acceptableThrowawayItems.value.add(block.asItem());
+                }
+            }
+            mod.getBehaviour().removeProtectedItems(blocksToItems(_blocks));**/
         }
 
         @Override
